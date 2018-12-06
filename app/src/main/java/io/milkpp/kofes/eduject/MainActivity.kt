@@ -1,30 +1,35 @@
 package io.milkpp.kofes.eduject
 
 import android.app.Activity
-import android.app.Application
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.drawable.Drawable
+import android.graphics.Matrix
+import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
-import android.support.design.widget.Snackbar
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
-import android.support.v4.content.res.ResourcesCompat
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu
 import android.view.MenuItem
 
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
-import java.util.jar.Manifest
+import java.io.File.separator
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+
 
 class MainActivity : AppCompatActivity() {
 
     private val REQUEST_CODE: Int = 123
     private val PICK_IMAGE_CODE: Int = 101
+    private val REQUEST_CODE_SAVE: Int = 111
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,11 +37,9 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         fab.setOnClickListener { view ->
-            sample_text.setText("Kek")
             // Here, thisActivity is the current activity
             if (ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
-
                 // Permission is not granted
                 // Should we show an explanation?
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this,
@@ -49,10 +52,6 @@ class MainActivity : AppCompatActivity() {
                     ActivityCompat.requestPermissions(this,
                         arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
                         REQUEST_CODE)
-
-                    // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                    // app-defined int constant. The callback method gets the
-                    // result of the request.
                 }
             } else {
                 // Permission has already been granted
@@ -60,6 +59,29 @@ class MainActivity : AppCompatActivity() {
                     Intent.ACTION_PICK,
                     android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
                 startActivityForResult(intent, PICK_IMAGE_CODE)
+            }
+        }
+
+        save.setOnClickListener { view ->
+            // Here, thisActivity is the current activity
+            if (ContextCompat.checkSelfPermission(applicationContext, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+                // Permission is not granted
+                // Should we show an explanation?
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                        android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    // Show an explanation to the user *asynchronously* -- don't block
+                    // this thread waiting for the user's response! After the user
+                    // sees the explanation, try again to request the permission.
+                } else {
+                    // No explanation needed, we can request the permission.
+                    ActivityCompat.requestPermissions(this,
+                        arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                        REQUEST_CODE_SAVE)
+                }
+            } else {
+                // Permission has already been granted
+                saveToGallery(applicationContext, (image.drawable as BitmapDrawable).bitmap)
             }
         }
 
@@ -81,16 +103,34 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
+                    sample_text.setText("Permission denied")
                 }
                 return
             }
-
+            REQUEST_CODE_SAVE -> {
+                // If request is cancelled, the result arrays are empty.
+                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+                    saveToGallery(applicationContext, (image.drawable as BitmapDrawable).bitmap)
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    sample_text.setText("Permission denied")
+                }
+                return
+            }
             // Add other 'when' lines to check for other
             // permissions this app might request.
             else -> {
                 // Ignore all other requests.
             }
         }
+    }
+
+    private fun Bitmap.flip(x: Float, y: Float, cx: Float, cy: Float): Bitmap {
+        val matrix = Matrix().apply { postScale(x, y, cx, cy) }
+        return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -105,8 +145,32 @@ class MainActivity : AppCompatActivity() {
             cursor?.close()
 
             val bm = BitmapFactory.decodeFile(filePath)
-            image.setImageBitmap(bm)
+            val cx = bm.width / 2f
+            val cy = bm.height / 2f
+            val flippedBitmap = bm.flip(-1f, 1f, cx, cy)
+            image.setImageBitmap(flippedBitmap)
+            sample_text.setText("Image loaded!")
         }
+    }
+
+    fun saveToGallery(context: Context, bitmap: Bitmap) {
+        val path = File(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+            separator
+        )
+        path.mkdirs()
+        val imageFile = File(path, "eduject-image_name.png")
+        var out: FileOutputStream? = null
+        try {
+            out = FileOutputStream(imageFile)
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+            out.flush()
+            out.close()
+            sample_text.setText("image saved!")
+        } catch (e: IOException) {
+            sample_text.setText("Could not resolve file stream: $e")
+        }
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

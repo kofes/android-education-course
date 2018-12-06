@@ -71,5 +71,5 @@ dependencies {
     implementation "com.squareup.picasso:picasso:$picasso_version"
 
     // Firebase
-    implementation "com.google.firebase:firebase-messaging:$firebase_version"
+//    implementation "com.google.firebase:firebase-messaging:$firebase_version"
 }
