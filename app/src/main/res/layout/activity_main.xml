@@ -24,21 +24,24 @@
     <include layout="@layout/content_main" android:id="@+id/include"/>
 
     <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab"
+            android:id="@+id/select"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"
             android:layout_margin="@dimen/fab_margin"
+            android:clickable="true"
+            android:focusable="true"
             app:srcCompat="@android:drawable/ic_menu_edit"
             app:backgroundTint="@color/colorBlue"/>
     <android.support.design.widget.FloatingActionButton
             android:id="@+id/save"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_anchorGravity="left|bottom"
+            android:layout_gravity="bottom|start"
             android:layout_margin="@dimen/fab_margin"
+            android:clickable="true"
+            android:focusable="true"
             app:srcCompat="@android:drawable/ic_menu_save"
-            app:layout_anchor="@+id/include"
             app:backgroundTint="@color/colorBlue"/>
 
 </android.support.design.widget.CoordinatorLayout>

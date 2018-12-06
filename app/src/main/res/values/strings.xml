@@ -2,4 +2,7 @@
     <string name="app_name">Eduject</string>
     <string name="action_settings">Settings</string>
     <string name="philip_sweet">TODO</string>
+    <string name="permission_denied">Permission denied</string>
+    <string name="image_loaded">Image loaded</string>
+    <string name="image_saved">Image saved</string>
 </resources>
